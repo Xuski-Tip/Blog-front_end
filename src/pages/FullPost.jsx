@@ -46,10 +46,10 @@ export const FullPost = () => {
         items={[
           {
             user: {
-              fullName: "Вася Пупкин",
+              fullName: "Леша Алексей",
               avatarUrl: "https://mui.com/static/images/avatar/1.jpg",
             },
-            text: "Это тестовый комментарий 555555",
+            text: "Мой первый коментарий на этом блоге!",
           },
           {
             user: {
