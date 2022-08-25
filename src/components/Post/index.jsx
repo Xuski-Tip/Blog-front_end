@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import {Link} from "react-router-dom"
 import clsx from 'clsx';
 import IconButton from '@mui/material/IconButton';
@@ -11,6 +11,9 @@ import styles from './Post.module.scss';
 import { UserInfo } from '../UserInfo';
 import { PostSkeleton } from './Skeleton';
 import { fetchRemovePost } from '../../redux/slices/posts';
+import {fetchRemove, fetchGetAllComments} from '../../redux/slices/Comments'
+import axios from '../../axios.js'
+
 
 export const Post = ({
   id,
@@ -26,18 +29,20 @@ export const Post = ({
   isLoading,
   isEditable,
 }) => {
+
   const dispatch = useDispatch()
+  
   if (isLoading) {
     return <PostSkeleton />;
   }
-
   const onClickRemove = () => {
     if(window.confirm("Вы действительно хотите удалить статью?")) {
-      dispatch(fetchRemovePost(id))
+      const data = dispatch(fetchRemovePost(id))
+      const dataRemove = dispatch(fetchRemove(id))
+      const dataAllcomments = dispatch(fetchGetAllComments())
     }
     
   };
-
   return (
     <div className={clsx(styles.root, { [styles.rootFull]: isFullPost })}>
       {isEditable && (
@@ -68,7 +73,7 @@ export const Post = ({
           <ul className={styles.tags}>
             {tags.map((name) => (
               <li key={name}>
-                <Link to={`/tag/${name}`}>#{name}</Link>
+                <Link to={`/tags/${name}`}>#{name}</Link>
               </li>
             ))}
           </ul>

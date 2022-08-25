@@ -1,80 +1,96 @@
 import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
+import TabContext from '@mui/lab/TabContext';
+import TabList from '@mui/lab/TabList';
+import TabPanel from '@mui/lab/TabPanel';
+
 import Grid from '@mui/material/Grid';
 import axios from '../axios.js'
 import { Post } from '../components/Post';
 import { TagsBlock } from '../components/TagsBlock';
 import { CommentsBlock } from '../components/CommentsBlock';
-import { fetchPosts, fetchTags } from '../redux/slices/posts.js';
-
+import { fetchPosts, fetchTags} from '../redux/slices/posts.js';
+import { fetchGetAllComments} from "../redux/slices/Comments";
+import {Link} from "react-router-dom"
+import { PopularPosts } from '../components/index.js';
+import './pages.scss'
 export const Home = () => {
   const dispatch = useDispatch()
   const {posts, tags} = useSelector(state => state.posts)
-  
-  const userData = useSelector(state => state.auth.data)
-  
+  const SortPosts = useSelector(state => state.posts.SortPosts)
 
+  const {comments} = useSelector(state => state.comments)
+  const [commentIsLoading, setCommentIsLoading] = React.useState(true)
+  const userData = useSelector(state => state.auth.data)
+  const [value, setValue] = React.useState('1');
+  const isCommentsLoading = comments.status === 'loading'
   const isPostsLoading = posts.status === 'loading';
   const isTagsLoading = tags.status === 'loading';
-
+  const handleChange = (event, newValue) => {
+    setValue(newValue);
+  };
   React.useEffect(()=> {
+    if(comments) {
+      setCommentIsLoading(false)
+    }
+    dispatch(fetchGetAllComments())
     dispatch(fetchPosts())
     dispatch(fetchTags())
   }, [])
-  console.log(posts);
   return (
     <>
-      <Tabs style={{ marginBottom: 15 }} value={0} aria-label="basic tabs example">
-        <Tab label="Новые" />
-        <Tab label="Популярные" />
-      </Tabs>
-      <Grid container spacing={4}>
-        <Grid xs={8} item>
-          {( isPostsLoading ? [...Array(5)] : posts.items).map((obj, index) => 
-          isPostsLoading ? (<Post 
-          isLoading = {true}
-          key={index}
-          >
+        
+      <TabContext value={value}>
+          <TabList onChange={handleChange} aria-label="lab API tabs example">
+            <Tab label="Новые" value="1" />
+            <Tab label="Популярные" value="2" />
+          </TabList>
+        <TabPanel value="1">
 
-          </Post>) 
+
+        <Grid container spacing={4}>
+        <Grid xs={8} item>
+          {( isPostsLoading ? [...Array(5)] : posts.items).map((obj, index) => isPostsLoading ? (<Post isLoading = {true} key={index}></Post>) 
           :(<Post
+          key={obj._id}
           id={obj._id}
           title={obj.title}
-          imageUrl={obj.imageUrl ? `${process.env.REACT_APP_API_URL}${obj.imageUrl}`: ''}
+          imageUrl={obj.imageUrl ? `${process.env.REACT_APP_API_URL}${obj.imageUrl}` : ''}
           user={obj.user}
           createdAt={obj.createdAt}
           viewsCount={obj.viewsCount}
-          commentsCount={3}
+          commentsCount={obj.commentsCount}
           tags={obj.tags}
           isEditable={userData?._id === obj.user._id}
         />)
            )}
         </Grid>
         <Grid xs={4} item>
+          <>
           <TagsBlock items={tags.items} isLoading={isTagsLoading} />
-          <CommentsBlock
-            items={[
-              {
-                user: {
-                  fullName: 'Леша Алексей',
-                  avatarUrl: 'https://mui.com/static/images/avatar/1.jpg',
-                },
-                text: 'Это тестовый комментарий',
-              },
-              {
-                user: {
-                  fullName: 'Иван Иванов',
-                  avatarUrl: 'https://mui.com/static/images/avatar/2.jpg',
-                },
-                text: 'When displaying three lines or more, the avatar is not aligned at the top. You should set the prop to align the avatar at the top',
-              },
-            ]}
-            isLoading={false}
-          />
+          {
+            isCommentsLoading ? <div></div> : <CommentsBlock items = {comments.items} isLoading = {commentIsLoading}/>
+          }
+          </>
         </Grid>
       </Grid>
+
+
+        </TabPanel>
+        <TabPanel value="2">
+          <PopularPosts 
+          tags={tags} 
+          userData={userData} 
+          isTagsLoading={isTagsLoading} 
+          isPostsLoading={isPostsLoading} 
+          isCommentsLoading={isCommentsLoading} 
+          comments={comments} 
+          SortPosts={SortPosts} 
+          commentIsLoading={commentIsLoading}/>
+        </TabPanel>
+      </TabContext>
+      
     </>
   );
 };

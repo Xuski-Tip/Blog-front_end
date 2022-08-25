@@ -1,19 +1,35 @@
 import React from "react";
 import {useParams} from "react-router-dom"
+import { useDispatch, useSelector} from 'react-redux';
 import { ReactMarkdown } from "react-markdown/lib/react-markdown";
 import axios from '../axios'
-
 import { Post } from "../components/Post";
 import { Index } from "../components/AddComment";
 import { CommentsBlock } from "../components/CommentsBlock";
-
+import { fetchGetComments} from "../redux/slices/Comments";
 export const FullPost = () => {
-
-  const [data, setData] = React.useState()
+  const dispatch = useDispatch()
+  const {comments} = useSelector(state => state.comments)
+  const [trueComments, userTrueComments] = React.useState(true)
+  const [data, setData] = React.useState([])
   const [isLoading, setLoading] = React.useState(true)
-
   const {id} = useParams()
+          // Изменение счетчика коментариев 
+          try{
+            const fields = {
+              commentsCount:comments.items.length
+            }
+            const {data} = axios.post(`/posts/${id}`, fields)
+          }catch(err) {
+            console.warn(err)
+            alert('Ошибка в возврате комментария')
+          }
+          //  
   React.useEffect(()=> {
+    dispatch(fetchGetComments(id))
+    if(comments) {
+      userTrueComments(false)
+    }
     axios.get(`/posts/${id}`).then((res)=> {
       setData(res.data)
       setLoading(false)
@@ -22,8 +38,6 @@ export const FullPost = () => {
       alert('Ошибка при получений статьи')
     })
   }, [])
-  const params = useParams()
-
   if(isLoading) {
     return <Post isLoading={isLoading} isFullPost/>
   }
@@ -36,32 +50,14 @@ export const FullPost = () => {
         user={data.user}
         createdAt={data.createdAt}
         viewsCount={data.viewsCount}
-        commentsCount={3}
+        commentsCount={comments.items.length}
         tags={data.tags}  
         isFullPost
       >
         <ReactMarkdown children={data.text}></ReactMarkdown>
       </Post>
-      <CommentsBlock
-        items={[
-          {
-            user: {
-              fullName: "Леша Алексей",
-              avatarUrl: "https://mui.com/static/images/avatar/1.jpg",
-            },
-            text: "Мой первый коментарий на этом блоге!",
-          },
-          {
-            user: {
-              fullName: "Иван Иванов",
-              avatarUrl: "https://mui.com/static/images/avatar/2.jpg",
-            },
-            text: "When displaying three lines or more, the avatar is not aligned at the top. You should set the prop to align the avatar at the top",
-          },
-        ]}
-        isLoading={false}
-      >
-        <Index />
+      <CommentsBlock items = {comments.items} isLoading = {trueComments}>
+      <Index />
       </CommentsBlock>
     </>
   );

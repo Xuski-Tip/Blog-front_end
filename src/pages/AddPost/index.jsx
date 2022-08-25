@@ -26,13 +26,14 @@ export const AddPost = () => {
   const handleChangeFile = async (event) => {
     try{
       
+      
+
       const formData = new FormData()
       const file = event.target.files[0]
       formData.append('image', file)
-
+      
       const {data} = await axios.post('/upload', formData)
       setImageUrl(data.url)
-
     } catch (err) {
       console.warn(err);
       alert('Ошибка при загрузке файла!')
@@ -54,7 +55,8 @@ export const AddPost = () => {
         title,
         imageUrl,
         tags,
-        text
+        text,
+        commentsCount: 0,
       }
       const {data} = isEditing ? await axios.patch(`/posts/${id}`, fields) : await axios.post('/posts', fields)
       
@@ -97,7 +99,6 @@ export const AddPost = () => {
   if(!window.localStorage.getItem('token') && !isAuth) {
     return <Navigate to="/"/>
   }
-
   return (
     <Paper style={{ padding: 30 }}>
       <Button onClick={() => inputFileRef.current.click()} variant="outlined" size="large">
@@ -119,7 +120,7 @@ export const AddPost = () => {
         variant="standard"
         value={title}
         onChange={(e) => setTitle(e.target.value)}
-
+        
         placeholder="Заголовок статьи..."
         fullWidth
       />

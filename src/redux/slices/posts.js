@@ -8,11 +8,20 @@ export const fetchTags = createAsyncThunk('posts/fetchTags', async () => {
     const {data} = await axios.get('/tags');
     return data
 })
+export const fetchSortPosts = createAsyncThunk('posts/fetchSortPosts', async () => {
+    const {data} = await axios.get('/getsortposts');
+    return data
+})
+
 export const fetchRemovePost = createAsyncThunk('posts/fetchRemovePost', async (id) => 
     axios.delete(`/posts/${id}`)
 )
 const initialState = {
     posts: {
+        items: [],
+        status: 'loading',
+    },
+    SortPosts: {
         items: [],
         status: 'loading',
     },
@@ -38,6 +47,19 @@ const postsSlice = createSlice({
         [fetchPosts.rejected]: (state) => {
             state.posts.items = []
             state.posts.status = 'error';
+        },
+        // Получение популярных статей
+        [fetchSortPosts.pending]: (state) => {
+            state.SortPosts.items = []
+            state.SortPosts.status = 'loading';
+        },
+        [fetchSortPosts.fulfilled]: (state, action) => {
+            state.SortPosts.items = action.payload
+            state.SortPosts.status = 'loaded';
+        },
+        [fetchSortPosts.rejected]: (state) => {
+            state.SortPosts.items = []
+            state.SortPosts.status = 'error';
         },
         // Получение тегов 
         [fetchTags.pending]: (state) => {

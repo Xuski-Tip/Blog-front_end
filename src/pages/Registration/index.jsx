@@ -6,32 +6,29 @@ import Typography from '@mui/material/Typography';
 import TextField from '@mui/material/TextField';
 import Paper from '@mui/material/Paper';
 import Button from '@mui/material/Button';
+import axios from '../../../src/axios.js';
 import Avatar from '@mui/material/Avatar';
-
 import styles from './Login.module.scss';
 import { fetchRegister, selectIsAuth } from "../../redux/slices/auth";
 
 export const Registration = () => {
   const isAuth = useSelector(selectIsAuth)
   const dispatch = useDispatch()
-  const {register, handleSubmit, setError, formState: {errors, isValid}} = useForm({
-    defaultValues: {
-      fullName: '',
-      email: '',
-      password: '',
-    },
+  const {register, handleSubmit, formState: {errors, isValid}} = useForm({
     mode: 'onChange',
-  })
+  });
   const onSubmit = async(values) => {
-    const data = await dispatch(fetchRegister(values))
-    // dispatch(fetchAuth(values))
-    
-    if(!data.payload) {
+    const formData = new FormData();
+    const file = values.avatarUrl[0];
+    formData.append('userIMG', file);
+    const {data}  = await axios.post('/userimg', formData)
+    values.avatarUrl = data.url
+    const dataFile = await dispatch(fetchRegister(values))
+    if(!dataFile.payload) {
       return alert('не удалось зарегестрироваться')
     }
-
-    if('token' in data.payload) {
-      window.localStorage.setItem('token', data.payload.token)
+    if('token' in dataFile.payload) {
+      window.localStorage.setItem('token', dataFile.payload.token)
     }
   }
 
@@ -67,6 +64,11 @@ export const Registration = () => {
       type='password'
       {...register('password', {required: 'Укажите пароль'})}
       className={styles.field} label="Пароль" fullWidth />
+      <label className={styles.input_file}>
+        <TextField  {...register('avatarUrl')}  type="file"/>
+        <span className={styles.input_file_btn}>Выберите Аватарку</span>           
+	   	  <span className={styles.input_file_text}>Макс 10мб</span>
+ 	    </label>
       <Button disabled={!isValid} type="submit" size="large" variant="contained" fullWidth>
         Зарегистрироваться
       </Button>
